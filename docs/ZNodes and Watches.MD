@@ -26,6 +26,6 @@ Znode的特性：
 2. 当client设置watch后，除非他看到watch event，否则他永远不会看到任何变化（a client will never see a change for which it has set a watch until it first sees the watch event.）
 
 3. 监测的数据类型：getData()和exists()设置的是data watch，getChildren()设置的是child watch。具体如下：
-+ setData()会触发data watch
-+ crete()会触发data watch以及父节点的child watch
+..*setData()会触发data watch
+..* crete()会触发data watch以及父节点的child watch
 + delete()会触发data watch以前child watch
