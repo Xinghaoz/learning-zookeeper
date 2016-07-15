@@ -1,5 +1,4 @@
-## Data Model
-ZooKeeper中最最重要的两个概念：ZNodes和Watches。
+ZooKeeper中最最重要的两个概念：**ZNodes** 和 **Watches**。
 ZNode是ZooKeeper中的基本功能单位，也就是常说的“节点”。Watches一个一次性的用于给client提供数据监测的工具。
 
 ### ZNodes
@@ -10,8 +9,8 @@ Zookeeper中的功能单位叫做ZNode，每个ZNode维持着一个状态结构�
 Znode的特性：
 1. 在Zookeeper中，每个ZNode可以有儿子，由此构成树状结构。这类似于文件系统一个文件同时也可以是目录。
 2. 父节点和子节点由"/"隔开，类似于文件目录的形式：
-..* /a
-..* /a/b/c
+- /a
+- /a/b/c
 3. Zookeeper只支持绝对路径，不支持相对路径。
 
 ### ZooKeeper Watches
