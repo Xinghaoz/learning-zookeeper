@@ -1,21 +1,58 @@
-ZooKeeper中最最重要的两个概念：**ZNodes** 和 **Watches**。
-ZNode是ZooKeeper中的基本功能单位，也就是常说的“节点”。Watches一个一次性的用于给client提供数据监测的工具。
+#### ZooKeeper中最最重要的两个概念：**ZNodes** 和 **Watches**。
+#### ZNode是ZooKeeper中的基本功能单位，也就是常说的“节点”。Watches一个一次性的用于给client提供数据监测的工具。
 
 ### ZNodes
-Zookeeper中的功能单位叫做ZNode，每个ZNode维持着一个状态结构，其中包含
 
-1. 数据变更的版本号
+#### Znode的特性：
 
-2. ACL(Access Control List)变更的版本号
-
-Znode的特性：
-
-1. 在Zookeeper中，每个ZNode可以有儿子，由此构成树状结构。这类似于文件系统一个文件同时也可以是目录。
+1. 在Zookeeper中，每个ZNode可以有儿子，由此构成树状结构。这类似于文件系统一个文件同时也可以是目录。不同的是，每个ZNode都有着与其关联的数据以及子节点的数据
 
 2. 父节点和子节点由"/"隔开，类似于文件目录的形式：
-* /a
-* /a/b/c
+  * /a
+  * /a/b/c
 3. Zookeeper只支持绝对路径，不支持相对路径。
+
+#### ZooKeeper里的时间
+
+1. Zxid (ZooKeeper Transaction Id)
+每次ZooKeeper的状态变化都会有个与其对应的zxid作为时间戳。zxid用来保证所有的变化都是有序的。例如：如果zxid1 < zxid2，那么zxid1的变化发生在zxid2之前
+
+
+
+#### 每个ZNode维持着许多状态，其中包含:
+（其中zxid＝ZooKeeper Transaction Id)
+
+1. czxid:
+这个ZNode创建时的zxid
+
+2. mzxid:
+这个ZNode最后一次更改的zxid
+
+3. ctime
+这个ZNode创建时距epoch(1970-01-01 00:00:00 UTC)的时间（以毫秒为单位）
+
+4. mtime
+这个ZNode创建时距epoch(1970-01-01 00:00:00 UTC)的时间（以毫秒为单位）
+
+5. version
+这个ZNode的变化的次数
+
+6. cversion
+这个ZNode的子节点变化的次数
+
+7. aversion
+这个ZNode的ACL变化的次数
+
+8. ephemeralOwner
+如果这个ZNode是ephemeral node　－　这个ZNode的所有着的session id
+如果这个ZNode不是ephemeral node －　0
+
+9. dataLength
+这个ZNode数据域的长度
+
+10. numChildren
+这个ZNode的子节点数量
+
 
 ### ZooKeeper Watches
 所有读操作：**getData()**, **getChildren()**, **exists()** 都会设置一个Watch。
@@ -26,6 +63,6 @@ Znode的特性：
 2. 当client设置watch后，除非他看到watch event，否则他永远不会看到任何变化（a client will never see a change for which it has set a watch until it first sees the watch event.）
 
 3. 监测的数据类型：getData()和exists()设置的是data watch，getChildren()设置的是child watch。具体如下：
-..*setData()会触发data watch
-..* crete()会触发data watch以及父节点的child watch
++ setData()会触发data watch
++ crete()会触发data watch以及父节点的child watch
 + delete()会触发data watch以前child watch
