@@ -1,5 +1,5 @@
-#### ZooKeeper中最最重要的两个概念：**ZNodes** 和 **Watches**。
-#### ZNode是ZooKeeper中的基本功能单位，也就是常说的“节点”。Watches一个一次性的用于给client提供数据监测的工具。
+ZooKeeper中最最重要的两个概念：**ZNodes** 和 **Watches**。
+ZNode是ZooKeeper中的基本功能单位，也就是常说的“节点”。Watches作用在ZNode上用于监测变化的工具。
 
 ### ZNodes
 
@@ -12,15 +12,21 @@
   * /a/b/c
 3. Zookeeper只支持绝对路径，不支持相对路径。
 
-#### ZooKeeper里的时间
+ZooKeeper里的时间
 
 1. Zxid (ZooKeeper Transaction Id)
 每次ZooKeeper的状态变化都会有个与其对应的zxid作为时间戳。zxid用来保证所有的变化都是有序的。例如：如果zxid1 < zxid2，那么zxid1的变化发生在zxid2之前
 
+2. Version numbers
+每次ZNode有变化就会导致version numbers其中的一个变化。如果熟悉版本控制（例如git）就知道版本号的意义。下面会说到，在ZNode中有三种版本号，分别是version, cversion, aversion。
 
+3. Ticks
+ZooKeeper中的最小单位，可以在配置文件中自行设置。例如，设置为2000(ms)，Zookeeper中最小的时间单位就是2秒。设置ZooKeeper中的timeout等都是以Tick为单位的。如果你设置的时间比tick小，那么server就会警告你timeout还是2000ms。
 
-#### 每个ZNode维持着许多状态，其中包含:
-（其中zxid＝ZooKeeper Transaction Id)
+4. Real time
+ZooKeeper不用现实时间。（除了ctime与mtime是相对于epoch的）
+
+知道ZooKeeper里关于时间与时间戳的定义，现在就可以来看ZNode中保存了什么。每个ZNode维持着许多状态，其中包含:
 
 1. czxid:
 这个ZNode创建时的zxid
@@ -53,6 +59,7 @@
 10. numChildren
 这个ZNode的子节点数量
 
+---
 
 ### ZooKeeper Watches
 所有读操作：**getData()**, **getChildren()**, **exists()** 都会设置一个Watch。
