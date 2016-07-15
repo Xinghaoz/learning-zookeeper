@@ -72,7 +72,7 @@ ZooKeeper不用现实时间。（除了ctime与mtime是相对于epoch的）
 3. 监测的数据类型：getData()和exists()设置的是data watch，getChildren()设置的是child watch。具体如下：
   * setData()会触发data watch
   * crete()会触发data watch以及父节点的child watch
-  * delete()会触发data watch以前child watch
+  * delete()会触发data watch以及child watch
 
 #### Watches能够保证：
 1. 每个watch相对于其它的watches, events, asynchronous replies都是有序的。
