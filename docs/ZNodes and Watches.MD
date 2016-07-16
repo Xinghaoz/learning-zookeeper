@@ -65,7 +65,7 @@ ZooKeeper不用现实时间。（除了ctime与mtime是相对于epoch的）
 ---
 
 ### ZooKeeper Watches
-所有读操作：**getData()**, **getChildren()**, **exists()** 都会设置一个Watch。
+所有读操作：**getData()**, **getChildren()**, **exists()** 都会在对应的ZNode上面设置一个Watch。
 一个watch是一个一次性触发器，当其监测的数据有变动时返回消息给client，它有三个重要的特性:
 
 1. 一次性的，触发一次就没了，需要再次设置
