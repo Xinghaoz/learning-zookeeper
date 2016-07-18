@@ -1,5 +1,5 @@
 ZooKeeper中最最重要的两个概念：**ZNodes** 和 **Watches**。
-ZNode是ZooKeeper中的数据节点，用来储存不超过1MB大小的数据，跟文件系统中的“文件”相类似。Watches是监测ZNodes变化的工具。
+ZNode是ZooKeeper中的数据节点，用来储存不超过1MB大小的数据，跟文件系统中的“文件”的概念相类似。Watches是监测ZNodes变化的工具。
 
 ### ZNodes
 
@@ -24,7 +24,7 @@ ZNode是ZooKeeper中的数据节点，用来储存不超过1MB大小的数据，
 每次ZNode有变化就会导致version numbers其中的一个变化。如果熟悉版本控制（例如git）就知道版本号的意义。下面会说到，在ZNode中有三种版本号，分别是version, cversion, aversion。
 
 3. Ticks
-ZooKeeper中的最小单位，可以在配置文件中自行设置。例如，设置为2000(ms)，Zookeeper中最小的时间单位就是2秒。设置ZooKeeper中的timeout等都是以Tick为单位的。如果你设置的时间比tick小，那么server就会警告你timeout还是2000ms。
+ZooKeeper中的最小的时间单位，可以在配置文件中自行设置。例如，设置为2000(ms)，Zookeeper中最小的时间单位就是2秒。设置ZooKeeper中的timeout等都是以Tick为单位的。如果你设置的时间比tick小，那么server就会警告你timeout还是以最小的单位2000ms来计算。
 
 4. Real time
 ZooKeeper不用现实时间。（除了ctime与mtime是相对于epoch的）

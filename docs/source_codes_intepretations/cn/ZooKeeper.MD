@@ -1,6 +1,6 @@
 ZooKeeper.java中包含了ZooKeeper这个类。 ZooKeeper这个类是client的主类，client中所有的操作（方法）包括对ZNodes的create, delete, getData, setData以及对Watches操作（方法）都定义在了这个类里面。
 
-这个类总共包含3000多行代码。其中构造函数以及一些主要的方法也重载了很多次，并且几乎都带有synchronous和asynchronous两种不同的版本。在此主要讲解最重要的部分，即这些类和方法”干了什么“，比较重要的细节可能会挑出来讲，很多内置变量与内置方法会略去不提。
+这个类总共包含3000多行代码。其中构造函数以及一些主要的方法也重载了很多次，并且几乎都带有synchronous和asynchronous两种不同的版本。在此主要讲解ZooKeeper这个大类的逻辑，即这些类和方法”干了什么“，包括内联的类，各个方法的作用，各个方法是怎么操作ZNode的和是怎么设置与触发在这个ZNode上的watch的。比较重要的细节可能会挑出来讲，很多内置变量与内置方法会略去不提。
 
 ZooKeeper类大致结构如下:
 ```java
@@ -13,7 +13,7 @@ class ZooKeeper {
     class ChildWatchRegistration extends WatchRegistration {}
 }
 ```
-### WatchRegistration
+### ZKWatchManager
 其中Z​KWatchManager类是管理这个client object **所有** Watches的。
 ZKWatchManager维持着三个Map：
 1. dataWatches
@@ -22,10 +22,11 @@ ZKWatchManager维持着三个Map：
 
 ZKWatchManager的主要作用是帮助外层ZooKeeper类管理这三个Map。但主要是删除(removeWatches())和查询是否存在(containsWatcher())。往这三个Map里添加Watches的方法是定义在WatchRegistration以及继承它的三个子类中的。
 
-### WatchRegistration (ExistsWatchRegistration, DataWatchRegistration, ChildWatchRegistration)
+### 虚类WatchRegistration以及实现它的三个实类(ExistsWatchRegistration, DataWatchRegistration, ChildWatchRegistration)
 这三个类提供了往ZKWatchManager里面三个Map注册（register）的方法，每一个分别对应着一个Watch类型。
 
 在ZNodes and Watches中提到过:
+
 `所有读操作：**getData()**, **getChildren()**, **exists()** 都会在对应的ZNode上面设置一个Watch。`
 
 例如：在getData()这个方法中会new一个DataWatchRegistration的实例，往这个实例的构造方法里面传入自己的clientPath，就实现了在一个ZNode上添加Watch的操作：
@@ -36,7 +37,13 @@ public byte[] getData(final String path, Watcher watcher, Stat stat)
         final String clientPath = path;
         PathUtils.validatePath(clientPath);
 
-        // the watch contains the un-chroot path
+        /* 注意watch的path是un-chroot的。
+         * 在3.2.0中加入了新特性chroot，以设置server的时候可以是
+         * "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002/app/a"
+         * 注意第三个server下如果新建一个foo的ZNode是新建成/app/a/foo
+         * server看到的是/app/a/foo, client看到的是/foo
+         * 但是这个类的clientPath要求的是un-chroot，即/app/a/foo
+         */
         WatchRegistration wcb = null;
         if (watcher != null) {
             // 这里新建了一个DataWatchRegistration的实例，并往这个实例里传入自己的clientPath

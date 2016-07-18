@@ -13,7 +13,7 @@ class ZooKeeper {
     class ChildWatchRegistration extends WatchRegistration {}
 }
 ```
-### WatchRegistration
+### ZKWatchManager
 其中Z​KWatchManager类是管理这个client object **所有** Watches的。
 ZKWatchManager维持着三个Map：
 1. dataWatches
@@ -22,10 +22,11 @@ ZKWatchManager维持着三个Map：
 
 ZKWatchManager的主要作用是帮助外层ZooKeeper类管理这三个Map。但主要是删除(removeWatches())和查询是否存在(containsWatcher())。往这三个Map里添加Watches的方法是定义在WatchRegistration以及继承它的三个子类中的。
 
-### WatchRegistration (ExistsWatchRegistration, DataWatchRegistration, ChildWatchRegistration)
+### 虚类WatchRegistration以及实现它的三个实类(ExistsWatchRegistration, DataWatchRegistration, ChildWatchRegistration)
 这三个类提供了往ZKWatchManager里面三个Map注册（register）的方法，每一个分别对应着一个Watch类型。
 
 在ZNodes and Watches中提到过:
+
 `所有读操作：**getData()**, **getChildren()**, **exists()** 都会在对应的ZNode上面设置一个Watch。`
 
 例如：在getData()这个方法中会new一个DataWatchRegistration的实例，往这个实例的构造方法里面传入自己的clientPath，就实现了在一个ZNode上添加Watch的操作：
@@ -58,6 +59,7 @@ class ZooKeeper {
     private final HostProvider hostProvider;
 
     public void updateServerList(String connectString) throws IOException {}
+    //　分别得到ZWWatchManager下面的三个Map
     List<String> getDataWatches() {}
     List<String> getExistWatches() {}
     List<String> getChildWatches() {}
@@ -81,6 +83,7 @@ class ZooKeeper {
 
         abstract protected Map<String, Set<Watcher>> getWatches(int rc);
 
+        // 这个函数把这个watch写进三个对应的Map之中的一个
         public void register(int rc) {}
     }
 
@@ -88,113 +91,116 @@ class ZooKeeper {
     class DataWatchRegistration extends WatchRegistration {}
     class ChildWatchRegistration extends WatchRegistration {}
 
+    // 状态枚举变量，一共有7个，形容这个client可能处在的7个状态。
+    // 1. 如果状态不是CLOSED或AUTH_FAILED，isAlived()就返回true
+    // 2. 如果状态是CONNECTED和CONNECTEDREADONLY，isConnected()就返回true
     public enum States {
         CONNECTING, ASSOCIATING, CONNECTED, CONNECTEDREADONLY,
         CLOSED, AUTH_FAILED, NOT_CONNECTED;
     }
 
-    // Constructor: 9 in total
+    // 一个有9个不构造函数
     public ZooKeeper(...) {}
 
     // TODO:
 
-    // Close "THIS" client object.
+    // 关闭”THIS"client实例
     public synchronized void close() throws InterruptedException {}
 
     /**
-     * Because the client might be in the subnode, this method
-     * change the the path from the client's view to servers' view.
+     * 因为在设置root的时候可以设置在子节点下，所以这个方法返回的是完全路径
      * (client): /b/c --> (server): /a/b/c
      */
     private String prependChroot(String clientPath) {}
 
     /**
-     * Create a node with the given path.  
-     * Will trigger watches of getData and getChildren if succeed.
-     * 2 synchronous and 2 asynchronous overload methods in total.
+     * 根据给定的path新建一个ZNode。
+     * 如果运行成功，这个方法会触发这个ZNode上的getData的watch和父节点的getChildren
+     * 一共有2个同步和2个异步的重载的方法
      */
     public String create(...) {}
 
     /**
-     * Delete the node with the given path.
-     * Will trigger watches of exists and getChildren of its parent node if succeed.
-     * 1 synchronous and 1 asynchronous overload methods in total.
+     * 根据给定的path删除一个ZNode
+     * 如果运行成功，这个方法会触发这个ZNode上的getData和父节点的getChildren。
+     * 一共有1个同步的和1个异步的重载的方法
      */
     public void delete(...) {}
 
     /**
-     * Return the stat of the node of the given path.  Return null if no such a node exists.
-     * Will left a watch triggered by a successful creates/delete.
-     * 2 synchronous and 2 asynchronous overload methods in total.
+     * 返回给定的path的ZNode的状态。返回null如果这个ZNode不存在。
+     * 会在这个ZNode上面设置一个watch，这个watch会被crete/delete触发。
+     * 一个共有2个同步的和2个异步的重载的方法
      */
      public void exists(...) {}
 
     /**
-     * return the data and the stat of the node of the given path.
-     * Will left a watch triggered by a successful operation that sets data on the node.
-     * 2 synchronous and 2 asynchronous overload methods in total.
+     * 返回数据以及这个节点的状态。
+     * 会在这个ZNode上面设置一个watch，这个watch会被对这个data进行的操作触发。
+     * 一共有2个同步的和两个异步的重载的方法
      */
      public byte[] getData(...) {}
 
     /**
-     * Set the data for the node of the given path if:
-     * 1. Such a node exists
-     * 2. The given version matches the version of the node.
-     * Will trigger all the getData watches on the node.
-     * 1 synchronous and 1 asynchronous overload methods in total.
+     * 对给定的ZNode上的数据进行设置，如果满足以下条件的话：
+     * 1. 这个给定的节点存在
+     * 2. 给定的版本匹配这个ZNode的版本
+     * 会触发getData设置的watches
+     * 一个有1个同步的和1个异步的重载的方法
      */
+     public Stat setData(...) {}
 
     /**
-     * Return the last committed configuration and stat of the configuration.
-     * Will left a watch on the configuration node triggered by a successful reconfig.
-     * 2 synchronous and 2 asynchronous overload methods in total.
+     * 返回最后一次commit的配置和这个配置的状态。
+     * 会在这个ZNode上设置一个watch，这个watch会被reconifg触发。
+     * 一共有2个同步的和2个异步的重载的方法
      */
      public byte[] getConfig(...) {}
 
     /**
-     * Reconfigure - add/remove servers.  Return the new configuration.
-     * 2 synchronous and 2 asynchronous overload methods in total.
+     * Reconfigure - 添加或删除servers。返回最新的配置。
+     * 一共有2个同步的和2个异步的重载的方法
      */
      public void reconfig(...) {}
 
     /**
-     * Return the ACL and stat of the node of the given path.
-     * 1 synchronous and 1 asynchronous overload methods in total.
+     * 返回给定path上的ACL以及状态
+     * 一共有1个同步的和1个异步的重载的方法
      */
      public void getACL(...) {}
 
     /**
-     * Set the ACL for the node of the given path if:
-     * 1. Such a node exists.
-     * 2. The given version matches the version of the node.
-     * 1 synchronous and 1 asynchronous overload methods in total.
+     * 对给定path上ZNode的ACL进行设置，如果满足以下条件的话：
+     * 1.　这个给定的ZNode存在
+     * 2. 给定的版本号匹配这个ZNode上的版本号
+     * 一共有1个同步的和1个异步的重载的方法
      */
      public Stat setACL(...) {}
 
     /**
-     * Return the list of the children of the node of the given path.
-     * 4 synchronous and 4 asynchronous overload methods in total.
+     * 返回给定path的ZNode的子节点列表
+     * 一共有4个同步的和4个异步的重载的方法
      */
     public List<String> getChildren(...) {}
 
     /**
-     * For the given ZNode path, removes the specified watcher of given watcherType.
-     * 1 synchronous and 1 asynchronous overload methods in total.
+     * 对于给定path下的ZNode，移除给定类型的watchr
+     * 一共有1个同步的和1个异步的重载的​方法
      */
     public void removeWatches(...) {}
 
     /**
-     * For the given ZNode path, removes *ALL* the registered watchers of given watcherType.
-     * 1 synchronous and 1 asynchronous overload methods in total.
+     * 对于给定path下的ZNode，移除*所有*注册了的给定的类型的watchers
+     * 一共有1个同步的和1个异步的重载的方法
      */
     public void removeAllWatches(...) {}
 
     /**
-     * String representation of this ZooKeeper client.
+     * 返回这个ZooKeeper client的String的表达
      */
     public String toString() {}
 
-    // Some test methods remaining.
+    // 剩下的是一些测试用的方法
 }
 
 ```
