@@ -70,7 +70,7 @@ ZooKeeper不用现实时间。（除了ctime与mtime是相对于epoch的）
 
 1. 一次性的，触发一次就没了，需要再次设置
 
-2. 当client设置watch后，除非他看到watch event，否则他永远不会看到任何变化（a client will never see a change for which it has set a watch until it first sees the watch event.）
+2. 当client设置watch后，保证下一个变化这个watch一定会提醒（此处有疑问－a client will never see a change for which it has set a watch until it first sees the watch event.）
 
 3. 监测的数据类型：getData()和exists()设置的是data watch，getChildren()设置的是child watch。具体如下：
   * setData()会触发data watch
