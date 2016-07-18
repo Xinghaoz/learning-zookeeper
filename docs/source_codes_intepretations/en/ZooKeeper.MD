@@ -11,11 +11,9 @@ class ZooKeeper {
     class ExistsWatchRegistration extends WatchRegistration {}
     class DataWatchRegistration extends WatchRegistration {}
     class ChildWatchRegistration extends WatchRegistration {}
-
 }
 ```
-#### WatchRegistration
-
+### WatchRegistration
 其中Z​KWatchManager类是管理这个client object **所有** Watches的。
 ZKWatchManager维持着三个Map：
 1. dataWatches
@@ -24,14 +22,13 @@ ZKWatchManager维持着三个Map：
 
 ZKWatchManager的主要作用是帮助外层ZooKeeper类管理这三个Map。但主要是删除(removeWatches())和查询是否存在(containsWatcher())。往这三个Map里添加Watches的方法是定义在WatchRegistration以及继承它的三个子类中的。
 
-#### WatchRegistration (ExistsWatchRegistration, DataWatchRegistration, ChildWatchRegistration)
-
+### WatchRegistration (ExistsWatchRegistration, DataWatchRegistration, ChildWatchRegistration)
 这三个类提供了往ZKWatchManager里面三个Map注册（register）的方法，每一个分别对应着一个Watch类型。
 
 在ZNodes and Watches中提到过:
 `所有读操作：**getData()**, **getChildren()**, **exists()** 都会在对应的ZNode上面设置一个Watch。`
 
-例如：在getData()这个方法中会new一个DataWatchRegistration的instance，往这个instance的构造方法里面传入自己的id，也就是clientPath，就实现了在一个ZNode上添加Watch的操作：
+例如：在getData()这个方法中会new一个DataWatchRegistration的实例，往这个实例的构造方法里面传入自己的clientPath，就实现了在一个ZNode上添加Watch的操作：
 ```java
 public byte[] getData(final String path, Watcher watcher, Stat stat)
         throws KeeperException, InterruptedException
@@ -42,6 +39,7 @@ public byte[] getData(final String path, Watcher watcher, Stat stat)
         // the watch contains the un-chroot path
         WatchRegistration wcb = null;
         if (watcher != null) {
+            // 这里新建了一个DataWatchRegistration的实例，并往这个实例里传入自己的clientPath
             wcb = new DataWatchRegistration(watcher, clientPath);
         }
 
